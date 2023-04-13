@@ -4,14 +4,29 @@ const mongoose = require("mongoose");
 
 const User = require("../models/user");
 
-// GET request to get all users
+// GET request to get ALL users
 router.get("/", (req, res, next) => {
   User.find()
+    .select("name email _id")
     .exec()
     .then((docs) => {
-      console.log(docs);
+      const response = {
+        count: docs.length,
+        users: docs.map((doc) => {
+          return {
+            name: doc.name,
+            email: doc.email,
+            _id: doc._id,
+            request: {
+              type: "GET",
+              url: "http://localhost:3000/users/" + doc._id,
+            },
+          };
+        }),
+      };
+
       // if (docs.length >= 0) {
-      res.status(200).json(docs);
+      res.status(200).json(response);
       //   } else {
       //     res.status(404).json({
       //       message: "No entries found",
@@ -43,8 +58,16 @@ router.post("/", (req, res, next) => {
     .catch((err) => console.log(err));
 
   res.status(200).json({
-    message: "Handling POST requests to /users",
-    createdUser: user,
+    message: "User created successfully",
+    createdUser: {
+      name: result.name,
+      email: result.email,
+      _id: result._id,
+      request: {
+        type: "GET",
+        url: "http://localhost:3000/users/" + result._id,
+      },
+    },
   });
 });
 
@@ -52,16 +75,29 @@ router.post("/", (req, res, next) => {
 router.get("/:id", (req, res, next) => {
   const id = req.params.id;
 
-  if (id === "special") {
-    res.status(200).json({
-      message: "You discovered the special ID",
-      id: id,
+  User.findById(id)
+    .select("name email _id")
+    .exec()
+    .then((doc) => {
+      console.log("From database", doc);
+      if (doc) {
+        res.status(200).json({
+          user: doc,
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/users",
+          },
+        });
+      } else {
+        res
+          .status(404)
+          .json({ message: "No valid entry found for the provided ID" });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: err });
     });
-  } else {
-    res.status(200).json({
-      message: "You passed an ID",
-    });
-  }
 });
 
 // PATCH request to update a user by ID
@@ -77,8 +113,13 @@ router.patch("/:id", (req, res, next) => {
   User.updateOne({ _id: id }, { $set: updateOps })
     .exec()
     .then((result) => {
-      console.log(result);
-      res.status(200).json(result);
+      res.status(200).json({
+        message: "User updated !",
+        request: {
+          type: "GET",
+          url: "http://localhost:3000/users/" + id,
+        },
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -94,7 +135,17 @@ router.delete("/:id", (req, res, next) => {
   User.deleteOne({ _id: id })
     .exec()
     .then((result) => {
-      res.status(200).json(result);
+      res.status(200).json({
+        message: "User deleted !",
+        request: {
+          type: "POST",
+          url: "http://localhost:3000/users/" + id,
+          data: {
+            name: "String",
+            email: "String",
+          },
+        },
+      });
     })
     .catch((err) => {
       console.log(err);

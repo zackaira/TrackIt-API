@@ -12,6 +12,7 @@ const trackRoutes = require("./api/routes/tracks");
 mongoose.connect(
   `mongodb+srv://zackaira:${process.env.MONGO_ATLAS_PW}@node-trackit-app.i0z7bnd.mongodb.net/?retryWrites=true&w=majority`
 );
+mongoose.Promise = global.Promise;
 
 // Use Morgan for logging
 app.use(morgan("dev")); //Eg: GET /users/ 200 0.809 ms - 45
