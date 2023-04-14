@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
@@ -5,7 +6,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 // Import API Routes
-const usersRoutes = require("./api/routes/users");
+const userRoutes = require("./api/routes/user");
 const trackRoutes = require("./api/routes/tracks");
 
 // Connect to MongoDB database
@@ -15,7 +16,8 @@ mongoose.connect(
 mongoose.Promise = global.Promise;
 
 // Use Morgan for logging
-app.use(morgan("dev")); //Eg: GET /users/ 200 0.809 ms - 45
+app.use(morgan("dev")); //Eg: GET /user/ 200 0.809 ms - 45
+app.use("/uploads", express.static("uploads")); // Make /uploads folder accessible by all
 // Use Body Parser to extract data as json so it's easier to work with
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -36,7 +38,7 @@ app.use((req, res, next) => {
 });
 
 // Use Routes witth Express
-app.use("/users", usersRoutes);
+app.use("/user", userRoutes);
 app.use("/tracks", trackRoutes);
 
 // Handle errors Routes not found 404

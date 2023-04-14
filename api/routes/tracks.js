@@ -8,13 +8,14 @@ const User = require("../models/user");
 router.get("/", (req, res, next) => {
   Track.find()
     .select("userId trackArray _id")
+    .populate("userId", "name email") // Adds User details into the Track response
     .exec()
     .then((docs) => {
       const response = {
         count: docs.length,
         tracks: docs.map((doc) => {
           return {
-            userId: doc.userId,
+            user: doc.userId,
             trackArray: doc.trackArray,
             _id: doc._id,
             request: {
@@ -126,7 +127,7 @@ router.patch("/:userId", (req, res, next) => {
     updateOps[ops.propName] = ops.value;
   }
 
-  Track.updateOne({ userId: userId }, { $set: updateOps })
+  Track.updateMany({ userId: userId }, { $set: updateOps })
     .exec()
     .then((result) => {
       res.status(200).json({
