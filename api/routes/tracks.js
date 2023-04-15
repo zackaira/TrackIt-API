@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Track = require("../models/track");
 const User = require("../models/user");
+const checkAuth = require("../middleware/check-auth");
 
 // GET request to get ALL Tracks
 router.get("/", (req, res, next) => {
@@ -77,7 +78,7 @@ router.get("/:userId", (req, res, next) => {
 });
 
 // POST request to add new Tracks
-router.post("/", (req, res, next) => {
+router.post("/", checkAuth, (req, res, next) => {
   User.findById(req.body.userId)
     .then((user) => {
       if (!user) {
@@ -117,7 +118,7 @@ router.post("/", (req, res, next) => {
 });
 
 // PATCH request to update a Track by ID
-router.patch("/:userId", (req, res, next) => {
+router.patch("/:userId", checkAuth, (req, res, next) => {
   const userId = req.params.userId;
 
   const updateOps = {};

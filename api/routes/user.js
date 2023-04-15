@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer");
+const checkAuth = require("../middleware/check-auth");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "./uploads/");
@@ -25,46 +26,45 @@ const upload = multer({
 });
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const User = require("../models/user");
 
 // GET request to get ALL users
-// router.get("/all", (req, res, next) => {
-//   User.find()
-//     .select("name email _id userImage")
-//     .exec()
-//     .then((docs) => {
-//       const response = {
-//         count: docs.length,
-//         users: docs.map((doc) => {
-//           return {
-//             name: doc.name,
-//             email: doc.email,
-//             userImage: doc.userImage,
-//             _id: doc._id,
-//             request: {
-//               type: "GET",
-//               url: "http://localhost:3000/users/" + doc._id,
-//             },
-//           };
-//         }),
-//       };
+router.get("/all", (req, res, next) => {
+  User.find()
+    .select("name email _id userImage")
+    .exec()
+    .then((docs) => {
+      const response = {
+        count: docs.length,
+        users: docs.map((doc) => {
+          return {
+            name: doc.name,
+            email: doc.email,
+            userImage: doc.userImage,
+            _id: doc._id,
+            request: {
+              type: "GET",
+              url: "http://localhost:3000/users/" + doc._id,
+            },
+          };
+        }),
+      };
 
-//       // if (docs.length >= 0) {
-//       res.status(200).json(response);
-//       //   } else {
-//       //     res.status(404).json({
-//       //       message: "No entries found",
-//       //     });
-//       //   }
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res.status(500).json({
-//         error: err,
-//       });
-//     });
-// });
+      // if (docs.length >= 0) {
+      res.status(200).json(response);
+      //   } else {
+      //     res.status(404).json({
+      //       message: "No entries found",
+      //     });
+      //   }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
+      });
+    });
+});
 
 // SIGNUP Route
 router.post("/signup", (req, res, next) => {
@@ -110,15 +110,17 @@ router.post("/signup", (req, res, next) => {
 
 // SIGNIN Route
 router.post("/login", (req, res, next) => {
-  User.findOne({ email: req.body.email })
+  User.find({ email: req.body.email })
     .exec()
     .then((user) => {
       if (user.length < 1) {
+        console.log(user);
         return res.status(401).json({
           message: "Auth failed",
         });
       }
-      bcrypt.compare(req.body.password, user.password, (err, result) => {
+
+      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
         if (err) {
           return res.status(401).json({
             message: "Auth failed",
@@ -184,7 +186,7 @@ router.get("/:id", (req, res, next) => {
 });
 
 // PATCH request to update a user by ID
-router.patch("/:id", (req, res, next) => {
+router.patch("/:id", checkAuth, (req, res, next) => {
   const id = req.params.id;
   const updateOps = {};
 
@@ -213,7 +215,7 @@ router.patch("/:id", (req, res, next) => {
 });
 
 // DELETE request to delete a user by ID
-router.delete("/:userId", (req, res, next) => {
+router.delete("/:userId", checkAuth, (req, res, next) => {
   const userId = req.params.userId;
   User.deleteOne({ _id: userId })
     .exec()
