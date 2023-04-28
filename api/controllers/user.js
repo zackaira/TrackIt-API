@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const multer = require("multer");
+// Set Options for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "./uploads/");
@@ -21,11 +22,9 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 * 5 }, // 5mb
   fileFilter: fileFilter,
 });
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
 const User = require("../models/user");
 
+// Get All Users - MOVE this to another controller later
 exports.get_all_users = (req, res, next) => {
   User.find()
     .select("name email _id userImage")
@@ -63,94 +62,7 @@ exports.get_all_users = (req, res, next) => {
     });
 };
 
-exports.user_signup = (req, res, next) => {
-  User.find({ email: req.body.email })
-    .exec()
-    .then((user) => {
-      if (user.length >= 1) {
-        return res.status(409).json({
-          message: "Email already exists",
-        });
-      } else {
-        bcrypt.hash(req.body.password, 10, (err, hash) => {
-          if (err) {
-            return res.status(500).json({
-              error: err,
-            });
-          } else {
-            const user = new User({
-              _id: new mongoose.Types.ObjectId(),
-              name: req.body.name,
-              email: req.body.email,
-              password: hash,
-            });
-            user
-              .save()
-              .then((result) => {
-                console.log(result);
-                res.status(201).json({
-                  message: "User created",
-                });
-              })
-              .catch((err) => {
-                console.log(err);
-                res.status(500).json({
-                  error: err,
-                });
-              });
-          }
-        });
-      }
-    });
-};
-
-exports.user_login = (req, res, next) => {
-  User.find({ email: req.body.email })
-    .exec()
-    .then((user) => {
-      if (user.length < 1) {
-        console.log(user);
-        return res.status(401).json({
-          message: "Auth failed",
-        });
-      }
-
-      bcrypt.compare(req.body.password, user[0].password, (err, result) => {
-        if (err) {
-          return res.status(401).json({
-            message: "Auth failed",
-          });
-        }
-        if (result) {
-          const token = jwt.sign(
-            {
-              email: user.email,
-              userId: user._id,
-            },
-            process.env.JWT_KEY,
-            {
-              expiresIn: "1h",
-            }
-          );
-
-          return res.status(200).json({
-            message: "Auth successful",
-            token: token,
-          });
-        }
-        res.status(401).json({
-          message: "Auth failed",
-        });
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
-    });
-};
-
+// Get user by ID
 exports.get_user_by_id = (req, res, next) => {
   const id = req.params.id;
 
@@ -179,6 +91,7 @@ exports.get_user_by_id = (req, res, next) => {
     });
 };
 
+// Update the user by ID
 exports.update_user = (req, res, next) => {
   const id = req.params.id;
   const updateOps = {};
@@ -207,6 +120,7 @@ exports.update_user = (req, res, next) => {
     });
 };
 
+// Delete a user - Admin only - Might remove this or make the user inactive instead
 exports.delete_user = (req, res, next) => {
   const userId = req.params.userId;
   User.deleteOne({ _id: userId })

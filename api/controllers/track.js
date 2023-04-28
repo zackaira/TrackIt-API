@@ -1,12 +1,9 @@
-const express = require("express");
-const router = express.Router();
 const mongoose = require("mongoose");
 const Track = require("../models/track");
 const User = require("../models/user");
-const checkAuth = require("../middleware/check-auth");
 
-// GET request to get ALL Tracks
-router.get("/", (req, res, next) => {
+// Get All Tracks - MOVE this to another controller later
+exports.get_all_tracks = (req, res, next) => {
   Track.find()
     .select("userId trackArray _id")
     .populate("userId", "name email") // Adds User details into the Track response
@@ -41,10 +38,10 @@ router.get("/", (req, res, next) => {
         error: err,
       });
     });
-});
+};
 
-// GET request to get Tracks by ID
-router.get("/:userId", (req, res, next) => {
+// Get Track by ID
+exports.get_track_by_id = (req, res, next) => {
   const userId = req.params.userId;
 
   Track.find({ userId: userId })
@@ -75,10 +72,10 @@ router.get("/:userId", (req, res, next) => {
       console.log(err);
       res.status(500).json({ error: err });
     });
-});
+};
 
-// POST request to add new Tracks
-router.post("/", checkAuth, (req, res, next) => {
+// Add New Track
+exports.add_new_track = (req, res, next) => {
   User.findById(req.body.userId)
     .then((user) => {
       if (!user) {
@@ -115,10 +112,10 @@ router.post("/", checkAuth, (req, res, next) => {
         error: err,
       });
     });
-});
+};
 
-// PATCH request to update a Track by ID
-router.patch("/:userId", checkAuth, (req, res, next) => {
+// Update Track
+exports.update_track = (req, res, next) => {
   const userId = req.params.userId;
 
   const updateOps = {};
@@ -145,6 +142,4 @@ router.patch("/:userId", checkAuth, (req, res, next) => {
         error: err,
       });
     });
-});
-
-module.exports = router;
+};

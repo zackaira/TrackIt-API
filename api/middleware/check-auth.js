@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
 
+// check if user is authorized to access a route
 module.exports = (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_KEY);
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.userData = decoded;
     next();
   } catch (error) {

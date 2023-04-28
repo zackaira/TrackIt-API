@@ -6,8 +6,9 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 // Import API Routes
+const authRoutes = require("./api/routes/auth");
 const userRoutes = require("./api/routes/user");
-const trackRoutes = require("./api/routes/tracks");
+const trackRoutes = require("./api/routes/track");
 
 // Connect to MongoDB database
 mongoose.connect(
@@ -38,8 +39,9 @@ app.use((req, res, next) => {
 });
 
 // Use Routes witth Express
+app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
-app.use("/tracks", trackRoutes);
+app.use("/track", trackRoutes);
 
 // Handle errors Routes not found 404
 app.use((req, res, next) => {
