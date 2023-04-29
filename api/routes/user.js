@@ -13,6 +13,7 @@ router.get("/:id", userController.get_user_by_id);
 router.patch("/:id", checkAuth, userController.update_user);
 
 // DELETE request to delete a user by ID
-router.delete("/:userId", checkAuth, userController.delete_user);
+// router.delete("/:userId", checkAuth, userController.delete_user);
+router.delete("/:userId", userController.delete_user);
 
 module.exports = router;

@@ -27,17 +27,18 @@ const User = require("../models/user");
 // Get All Users - MOVE this to another controller later
 exports.get_all_users = (req, res, next) => {
   User.find()
-    .select("name email _id userImage")
+    .select("_id email userImage dateCreated")
     .exec()
     .then((docs) => {
       const response = {
         count: docs.length,
         users: docs.map((doc) => {
+          console.log(doc);
           return {
-            name: doc.name,
-            email: doc.email,
-            userImage: doc.userImage,
             _id: doc._id,
+            email: doc.email,
+            userImage: doc.userImage || "",
+            dateCreated: doc.dateCreated || "",
             request: {
               type: "GET",
               url: "http://localhost:3000/users/" + doc._id,
@@ -80,9 +81,7 @@ exports.get_user_by_id = (req, res, next) => {
           },
         });
       } else {
-        res
-          .status(404)
-          .json({ message: "No valid entry found for the provided ID" });
+        res.status(404).json({ message: "This user does not exist" });
       }
     })
     .catch((err) => {

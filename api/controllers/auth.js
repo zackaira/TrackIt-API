@@ -5,8 +5,6 @@ const User = require("../models/user");
 
 // User SIGNUP route
 exports.user_signup = (req, res, next) => {
-  console.log(req.body);
-
   User.find({ email: req.body.email })
     .exec()
     .then((user) => {
@@ -43,8 +41,12 @@ exports.user_signup = (req, res, next) => {
               .then((result) => {
                 console.log(result);
                 res.status(201).json({
-                  message: "User created",
-                  accessToken: accessToken,
+                  _id: user._id,
+                  email: user.email,
+                  token: {
+                    accessToken: accessToken,
+                  },
+                  dateCreated: user.dateCreated,
                 });
               })
               .catch((err) => {
@@ -100,9 +102,14 @@ exports.user_login = (req, res, next) => {
           );
 
           return res.status(200).json({
-            message: "Auth successful",
-            accessToken: accessToken,
-            refreshToken: refreshToken,
+            _id: user[0]._id,
+            email: user[0].email,
+            token: {
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+            },
+            lastLoggedIn: new Date().toISOString(),
+            dateCreated: user[0].dateCreated,
           });
         }
         res.status(401).json({
