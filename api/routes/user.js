@@ -11,22 +11,13 @@ router.get("/all", userController.get_all_users);
 router.get("/:id", userController.get_user_by_id);
 
 // PATCH request to update a user by ID
-router.patch("/:id", checkAuth, userController.update_user);
+router.patch("/update", checkAuth, userController.update_user);
 
 // DELETE request to delete a user by ID
-router.delete(
-  "/:userId",
-  checkAuth,
-  restrictTo("admin"),
-  userController.delete_user
-);
+router.delete("/delete", checkAuth, userController.delete_user);
 // router.delete("/:userId", userController.delete_user);
 
 // Update Password Route
-router.patch(
-  "/updatePassword/:userId",
-  checkAuth,
-  userController.update_password
-);
+router.patch("/updatePassword", checkAuth, userController.update_password);
 
 module.exports = router;

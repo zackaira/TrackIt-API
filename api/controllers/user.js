@@ -26,8 +26,19 @@ const upload = multer({
 });
 const User = require("../models/user");
 
+// Filter function used in update_user
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+
+  return newObj;
+};
+
 // Get All Users - MOVE this to another controller later
 exports.get_all_users = (req, res, next) => {
+  // For only active users, use User.find({ active: true })
   User.find()
     .select("_id email userImage role dateCreated")
     .exec()
@@ -93,48 +104,49 @@ exports.get_user_by_id = (req, res, next) => {
 
 // Update the user by ID
 exports.update_user = (req, res, next) => {
-  const id = req.params.id;
-  const updateOps = {};
+  const id = req.userData.userId;
+  const filteredBody = filterObj(req.body, "email", "role"); // Set fields that are allowed to be updated
 
-  // Loop through the request and only update the properties that changed
-  for (const ops of req.body) {
-    updateOps[ops.propName] = ops.value;
-  }
-
-  User.updateOne({ _id: id }, { $set: updateOps })
+  User.findByIdAndUpdate({ _id: id }, filteredBody, { new: true })
     .exec()
     .then((result) => {
-      res.status(200).json({
-        message: "User updated !",
-        request: {
-          type: "GET",
-          url: `${process.env.API_URL}/user/${id}`,
-        },
-      });
+      console.log("result: ", result);
+
+      if (result) {
+        res.status(200).json({
+          message: "User updated !",
+          user: result,
+          request: {
+            type: "GET",
+            url: `${process.env.API_URL}/user/${id}`,
+          },
+        });
+      } else {
+        res.status(404).json({ message: "This user does not exist" });
+      }
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+      // console.log(err);
+      res.status(404).json({ message: "User Not Found!" });
     });
 };
 
 // Delete a user - Admin only - Might remove this or make the user inactive instead
 exports.delete_user = (req, res, next) => {
-  const userId = req.params.userId;
-  User.deleteOne({ _id: userId })
+  const userId = req.userData.userId;
+
+  console.log(req);
+
+  User.findByIdAndUpdate({ _id: userId }, { active: false })
     .exec()
     .then((result) => {
-      res.status(200).json({
-        message: "User deleted",
+      res.status(204).json({
+        message: "Account deleted!",
       });
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+      res.status(404).json({ message: "User Not Found!" });
     });
 };
 
