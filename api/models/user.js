@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema({
@@ -16,10 +17,39 @@ const userSchema = mongoose.Schema({
   userImage: {
     type: String,
   },
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user",
+  },
   dateCreated: {
     type: Date,
     default: Date.now,
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
+
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000; // Not sure if this is working
+  next();
+});
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // console.log({ resetToken }, this.passwordResetToken);
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // valid for 10 minutes
+
+  return resetToken;
+};
 
 module.exports = mongoose.model("User", userSchema);

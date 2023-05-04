@@ -3,6 +3,7 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 
 // Import API Routes
@@ -16,8 +17,13 @@ mongoose.connect(
 );
 mongoose.Promise = global.Promise;
 
-// Use Morgan for logging
-app.use(morgan("dev")); //Eg: GET /user/ 200 0.809 ms - 45
+app.use(morgan("dev")); // Use Morgan for logging. Eg: GET /user/ 200 0.809 ms - 45
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 150 requests per 15 minutes
+  message: "Too many requests from this IP, please try again in 15 minutes",
+});
+app.use("/auth", limiter); // Apply request limits to /auth route
 app.use("/uploads", express.static("uploads")); // Make /uploads folder accessible by all
 // Use Body Parser to extract data as json so it's easier to work with
 app.use(bodyParser.urlencoded({ extended: false }));

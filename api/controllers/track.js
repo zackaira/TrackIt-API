@@ -18,7 +18,7 @@ exports.get_all_tracks = (req, res, next) => {
             _id: doc._id,
             request: {
               type: "GET",
-              url: "http://localhost:3000/tracks/" + doc._id,
+              url: `${process.env.API_URL}/tracks/${doc._id}`,
             },
           };
         }),
@@ -59,7 +59,7 @@ exports.get_track_by_id = (req, res, next) => {
           tracks: doc,
           request: {
             type: "GET",
-            url: "http://localhost:3000/tracks",
+            url: `${process.env.API_URL}/tracks`,
           },
         });
       } else {
@@ -102,7 +102,7 @@ exports.add_new_track = (req, res, next) => {
         },
         request: {
           type: "GET",
-          url: "http://localhost:3000/tracks/" + result._id,
+          url: `${process.env.API_URL}/tracks/${result._id}`,
         },
       });
     })
@@ -132,7 +132,7 @@ exports.update_track = (req, res, next) => {
         message: "Track updated for the user!",
         request: {
           type: "GET",
-          url: "http://localhost:3000/tracks/" + userId,
+          url: `${process.env.API_URL}/tracks/${userId}`,
         },
       });
     })

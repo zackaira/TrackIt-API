@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const checkAuth = require("../middleware/check-auth");
+const restrictTo = require("../middleware/restrict-to");
 const userController = require("../controllers/user");
 
 // GET request to get ALL users
@@ -13,7 +14,19 @@ router.get("/:id", userController.get_user_by_id);
 router.patch("/:id", checkAuth, userController.update_user);
 
 // DELETE request to delete a user by ID
-// router.delete("/:userId", checkAuth, userController.delete_user);
-router.delete("/:userId", userController.delete_user);
+router.delete(
+  "/:userId",
+  checkAuth,
+  restrictTo("admin"),
+  userController.delete_user
+);
+// router.delete("/:userId", userController.delete_user);
+
+// Update Password Route
+router.patch(
+  "/updatePassword/:userId",
+  checkAuth,
+  userController.update_password
+);
 
 module.exports = router;

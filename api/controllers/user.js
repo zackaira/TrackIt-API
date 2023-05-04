@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const multer = require("multer");
 // Set Options for file uploads
 const storage = multer.diskStorage({
@@ -27,21 +29,21 @@ const User = require("../models/user");
 // Get All Users - MOVE this to another controller later
 exports.get_all_users = (req, res, next) => {
   User.find()
-    .select("_id email userImage dateCreated")
+    .select("_id email userImage role dateCreated")
     .exec()
     .then((docs) => {
       const response = {
         count: docs.length,
         users: docs.map((doc) => {
-          console.log(doc);
           return {
             _id: doc._id,
             email: doc.email,
             userImage: doc.userImage || "",
+            role: doc.role,
             dateCreated: doc.dateCreated || "",
             request: {
               type: "GET",
-              url: "http://localhost:3000/users/" + doc._id,
+              url: `${process.env.API_URL}/users/${doc._id}`,
             },
           };
         }),
@@ -71,13 +73,12 @@ exports.get_user_by_id = (req, res, next) => {
     .select("name email _id userImage")
     .exec()
     .then((doc) => {
-      console.log("From database", doc);
       if (doc) {
         res.status(200).json({
           user: doc,
           request: {
             type: "GET",
-            url: "http://localhost:3000/user/" + doc._id,
+            url: `${process.env.API_URL}/user/${doc._id}`,
           },
         });
       } else {
@@ -107,7 +108,7 @@ exports.update_user = (req, res, next) => {
         message: "User updated !",
         request: {
           type: "GET",
-          url: "http://localhost:3000/user/" + id,
+          url: `${process.env.API_URL}/user/${id}`,
         },
       });
     })
@@ -134,5 +135,84 @@ exports.delete_user = (req, res, next) => {
       res.status(500).json({
         error: err,
       });
+    });
+};
+
+exports.update_password = (req, res, next) => {
+  const userId = req.params.userId;
+  // Get user from collection
+  User.findById(userId)
+    .select("+password")
+    .exec()
+    .then((user) => {
+      if (user) {
+        bcrypt.compare(
+          req.body.currentPassword,
+          user.password,
+          (err, result) => {
+            if (err) {
+              return res.status(401).json({
+                message: "Incorrect Current Password!",
+              });
+            }
+
+            if (result) {
+              bcrypt.hash(req.body.newPassword, 10, (err, hash) => {
+                if (err) {
+                  return res.status(500).json({
+                    error: err,
+                  });
+                } else {
+                  user.password = hash;
+
+                  const tokenPayload = {
+                    userId: user._id,
+                    email: user.email,
+                    role: user.role,
+                  };
+
+                  const accessToken = jwt.sign(
+                    tokenPayload,
+                    process.env.ACCESS_TOKEN_SECRET,
+                    {
+                      expiresIn: "14m", // 14m
+                    }
+                  );
+
+                  user
+                    .save()
+                    .then((result) => {
+                      res.status(201).json({
+                        _id: user._id,
+                        email: user.email,
+                        token: {
+                          accessToken: accessToken,
+                        },
+                        role: user.role,
+                        dateCreated: user.dateCreated,
+                      });
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      res.status(500).json({
+                        error: err,
+                      });
+                    });
+                }
+              });
+            } else {
+              return res.status(401).json({
+                message: "Incorrect Current Password!",
+              });
+            }
+          }
+        );
+      } else {
+        res.status(404).json({ message: "User Not Found!" });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(404).json({ message: "User Not Found!" });
     });
 };
