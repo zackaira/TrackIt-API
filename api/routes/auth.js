@@ -3,16 +3,16 @@ const router = express.Router();
 const checkAuth = require("../middleware/check-auth");
 const authController = require("../controllers/auth");
 
-// SIGNUP Route
+// Signup Route
 router.post("/signup", authController.user_signup);
 
-// SIGNIN Route
+// Login Route
 router.post("/login", authController.user_login);
 
-// SIGNIN Route
+// Forgot Password Route
 router.post("/forgotPassword", authController.forgot_password);
 
-// SIGNIN Route
+// Reset Password Route
 router.patch("/resetPassword/:token", authController.reset_password);
 
 // Get new token

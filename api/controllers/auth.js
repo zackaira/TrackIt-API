@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const sendEmail = require("../util/email");
+const Email = require("../util/email");
 
 // User SIGNUP route
 exports.user_signup = (req, res, next) => {
@@ -44,6 +44,16 @@ exports.user_signup = (req, res, next) => {
             user
               .save()
               .then((result) => {
+                // CHECK IF USER_SIGNUP NEEDS CATCHASYNC FUNCTION TO BE ABLE TO ADD AWAIT ONTO NEW EMAIL FUNCTION
+                const testUser = {
+                  firstName: "Zacariah",
+                  email: "zack@kairaweb.com",
+                  role: "user",
+                };
+                // const url = `${process.env.API_URL}/activate_account_url`;
+                const url = `https://kairaweb.com/`;
+                new Email(testUser, url).sendWelcome();
+
                 res.status(201).json({
                   _id: user._id,
                   email: user.email,
@@ -105,6 +115,12 @@ exports.user_login = (req, res, next) => {
             }
           );
 
+          // Reactivate user account if deactivated
+          // if (user[0].active === false) {
+          //   user[0].active = true;
+          //   user[0].save();
+          // }
+
           return res.status(200).json({
             _id: user[0]._id,
             email: user[0].email,
@@ -143,18 +159,19 @@ exports.forgot_password = (req, res, next) => {
       const resetToken = user[0].createPasswordResetToken();
       user[0].save({ validateBeforeSave: false });
 
-      const resetURL = `${req.protocol}://${req.get(
-        "host"
-      )}/auth/resetPassword/${resetToken}`;
-
-      const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
-
       try {
-        sendEmail({
-          email: user[0].email,
-          subject: "Your password reset token (valid for 10 min)",
-          message,
-        });
+        const resetURL = `${req.protocol}://${req.get(
+          "host"
+        )}/auth/resetPassword/${resetToken}`;
+
+        // CONFIGURE THIS TO USE THE PROPER USER DETAILS
+        // CHECK IF USER_SIGNUP NEEDS CATCHASYNC FUNCTION TO BE ABLE TO ADD AWAIT ONTO NEW EMAIL FUNCTION
+        const testUser = {
+          firstName: "Zacariah",
+          email: "zack@kairaweb.com",
+          role: "user",
+        };
+        new Email(testUser, resetURL).sendPasswordReset();
 
         res.status(200).json({
           status: "success",

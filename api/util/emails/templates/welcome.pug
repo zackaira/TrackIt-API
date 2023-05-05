@@ -1,0 +1,16 @@
+extends ../baseEmail
+block templates/content
+	p Hey #{firstName},
+	p Thank you for trying out the TrackIt App !
+	p We're working hard to improve the app for you to track almost anything you want.
+	p Please click the link below to confirm your email or use the code to activate within the App.
+	br
+	p.email-link
+		a.email-btn(href=`${url}`, target='_blank') Activate your account
+	p.email-code Your Activation code is:
+		br
+		strong 45345
+	br
+	br
+	p If you find any bugs when using the app, please don't hesitate to let me know.
+	p - Zack, App Developer

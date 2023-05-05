@@ -31,7 +31,7 @@ const userSchema = mongoose.Schema({
   active: {
     type: Boolean,
     default: true,
-    select: false, // Hides this proerty from the output
+    select: false, // Hides this property from the output
   },
 });
 
@@ -42,6 +42,7 @@ userSchema.pre("save", function (next) {
   next();
 });
 
+// userSchema method to create password reset token
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
 

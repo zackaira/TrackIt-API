@@ -102,7 +102,7 @@ exports.get_user_by_id = (req, res, next) => {
     });
 };
 
-// Update the user by ID
+// Update user by accessToken
 exports.update_user = (req, res, next) => {
   const id = req.userData.userId;
   const filteredBody = filterObj(req.body, "email", "role"); // Set fields that are allowed to be updated
@@ -131,7 +131,7 @@ exports.update_user = (req, res, next) => {
     });
 };
 
-// Delete a user - Admin only - Might remove this or make the user inactive instead
+// Delete user (deactivate) by accessToken
 exports.delete_user = (req, res, next) => {
   const userId = req.userData.userId;
 
@@ -150,9 +150,10 @@ exports.delete_user = (req, res, next) => {
     });
 };
 
+// Update user password
 exports.update_password = (req, res, next) => {
-  const userId = req.params.userId;
-  // Get user from collection
+  const userId = req.userData.userId;
+
   User.findById(userId)
     .select("+password")
     .exec()
