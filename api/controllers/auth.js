@@ -150,9 +150,10 @@ exports.forgot_password = (req, res, next) => {
   User.find({ email: req.body.email })
     .exec()
     .then((user) => {
+      console.log(user);
       if (user.length < 1) {
         return res.status(401).json({
-          message: "There is no user with that email address",
+          message: "Email address does not exist",
         });
       }
 
@@ -160,9 +161,10 @@ exports.forgot_password = (req, res, next) => {
       user[0].save({ validateBeforeSave: false });
 
       try {
-        const resetURL = `${req.protocol}://${req.get(
-          "host"
-        )}/auth/resetPassword/${resetToken}`;
+        // const resetURL = `${req.protocol}://${req.get(
+        //   "host"
+        // )}/auth/resetPassword/${resetToken}`;
+        const resetURL = `http://127.0.0.1:5173/resetPassword/${resetToken}`;
 
         // CONFIGURE THIS TO USE THE PROPER USER DETAILS
         // CHECK IF USER_SIGNUP NEEDS CATCHASYNC FUNCTION TO BE ABLE TO ADD AWAIT ONTO NEW EMAIL FUNCTION
@@ -194,7 +196,7 @@ exports.forgot_password = (req, res, next) => {
     .catch((err) => {
       console.log(err);
       res.status(500).json({
-        error: err,
+        message: "Email address does not exist",
       });
     });
 };
